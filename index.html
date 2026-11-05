@@ -1,0 +1,801 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#05353d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+<title>Simon - Birthday Card</title>
+
+<style>
+:root {
+  --primary: #fff;
+  --bg-color: rgb(5, 53, 61);
+  --bg-envelope-color: #f5edd1;
+  --envelope-tab: #ecdeb8;
+  --envelope-cover: #e6cfa7;
+  --shadow-color: rgba(0,0,0,.2);
+  --txt-color: #444;
+  --heart-color: rgb(252,8,231);
+
+  --env-width: min(300px, 78vw, 42dvh);
+  --env-height: calc(var(--env-width) * .767);
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  width: 100%;
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+
+  padding:
+    calc(125px + env(safe-area-inset-top))
+    12px
+    calc(20px + env(safe-area-inset-bottom));
+
+  background: var(--bg-color);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  overflow: hidden;
+  position: relative;
+
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.container {
+  width: 100%;
+  display: grid;
+  place-items: center;
+  position: relative;
+  z-index: 2;
+}
+
+.envelope-wrapper {
+  position: relative;
+  width: var(--env-width);
+  height: var(--env-height);
+  background: var(--bg-envelope-color);
+  box-shadow: 0 0 40px var(--shadow-color);
+  z-index: 2;
+}
+
+.envelope {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  outline: none;
+}
+
+.envelope::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  z-index: 2;
+
+  border-top: calc(var(--env-height) * .565) solid var(--envelope-tab);
+  border-right: calc(var(--env-width) / 2) solid transparent;
+  border-left: calc(var(--env-width) / 2) solid transparent;
+
+  transform-origin: top;
+  transition: transform .85s ease-in-out;
+  backface-visibility: hidden;
+}
+
+.envelope::after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+
+  width: 0;
+  height: 0;
+
+  border-top: calc(var(--env-height) * .565) solid transparent;
+  border-right: calc(var(--env-width) / 2) solid var(--envelope-cover);
+  border-bottom: calc(var(--env-height) * .435) solid var(--envelope-cover);
+  border-left: calc(var(--env-width) / 2) solid var(--envelope-cover);
+}
+
+/* الرسالة */
+
+.letter {
+  position: fixed;
+  left: 50%;
+  top: calc(120px + env(safe-area-inset-top));
+
+  width: min(370px, calc(100vw - 28px));
+
+  max-height: min(58dvh, 430px);
+
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+
+  scrollbar-width: thin;
+  scrollbar-color: #d8c7c9 transparent;
+
+  background: var(--primary);
+  border-radius: 15px;
+
+  box-shadow: 0 6px 25px rgba(0,0,0,.3);
+
+  padding: 16px;
+
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+
+  transform: translateX(-50%) translateY(15px) scale(.96);
+
+  transition:
+    opacity .65s ease,
+    transform .65s ease,
+    visibility .65s;
+
+  z-index: 5;
+}
+
+.letter::-webkit-scrollbar {
+  width: 5px;
+}
+
+.letter::-webkit-scrollbar-thumb {
+  background: #d8c7c9;
+  border-radius: 10px;
+}
+
+.letter h2 {
+  margin: 0 0 12px;
+  font-size: clamp(16px, 4.5vw, 19px);
+  color: #e91e63;
+  text-align: center;
+}
+
+.letter .content {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.letter img {
+  width: clamp(60px, 19vw, 78px);
+  height: clamp(60px, 19vw, 78px);
+
+  border-radius: 12px;
+  object-fit: cover;
+
+  flex-shrink: 0;
+  order: 2;
+
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+.letter .text {
+  font-family: Calibri, Arial, sans-serif;
+  color: var(--txt-color);
+
+  font-size: clamp(13px, 3.6vw, 15px);
+  line-height: 1.5;
+
+  text-align: left;
+  direction: ltr;
+
+  order: 1;
+  flex: 1;
+  min-width: 0;
+
+  overflow-wrap: anywhere;
+}
+
+.letter p {
+  margin: 0;
+  white-space: pre-line;
+}
+
+/* القلب */
+
+.heart {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+
+  width: 20px;
+  height: 20px;
+
+  background: var(--heart-color);
+
+  z-index: 6;
+
+  transform: translate(-50%,-50%) rotate(45deg);
+
+  box-shadow: 0 0 15px rgba(252,8,231,.8);
+
+  animation: pulse 1.5s infinite;
+
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.heart::before,
+.heart::after {
+  content: "";
+  position: absolute;
+
+  width: 20px;
+  height: 20px;
+
+  background: var(--heart-color);
+  border-radius: 50%;
+}
+
+.heart::before {
+  top: -10px;
+}
+
+.heart::after {
+  right: 10px;
+}
+
+/* حالة فتح الظرف */
+
+.flap .envelope::before {
+  transform: rotateX(180deg);
+  z-index: 0;
+}
+
+.flap .letter {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+
+  transform: translateX(-50%) translateY(0) scale(1);
+
+  transition-delay: .2s;
+}
+
+.flap .heart {
+  transform: translate(-50%,-50%) rotate(90deg) scale(1.3);
+  animation: none;
+  box-shadow: 0 0 30px rgba(252,8,231,1);
+}
+
+/* الأنيميشن */
+
+@keyframes pulse {
+  0%,100% {
+    transform: translate(-50%,-50%) rotate(45deg) scale(1);
+    box-shadow: 0 0 10px rgba(252,8,231,.6);
+  }
+
+  50% {
+    transform: translate(-50%,-50%) rotate(45deg) scale(1.35);
+    box-shadow: 0 0 25px rgba(252,8,231,1);
+  }
+}
+
+.confetti {
+  position: fixed;
+  width: 7px;
+  height: 12px;
+
+  top: -20px;
+
+  opacity: .9;
+  pointer-events: none;
+
+  animation: fall 3s linear forwards;
+  z-index: 1;
+}
+
+@keyframes fall {
+  to {
+    transform: translateY(110dvh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+.star {
+  position: fixed;
+  width: 2px;
+  height: 2px;
+
+  background: white;
+  border-radius: 50%;
+
+  opacity: .8;
+  pointer-events: none;
+
+  animation: twinkle 2s infinite;
+  z-index: 1;
+}
+
+@keyframes twinkle {
+  0%,100% { opacity: .2; }
+  50% { opacity: 1; }
+}
+
+/* أزرار الموسيقى */
+
+.music-select {
+  position: fixed;
+
+  top: calc(76px + env(safe-area-inset-top));
+  right: calc(18px + env(safe-area-inset-right));
+
+  z-index: 99999;
+
+  max-width: calc(100vw - 36px);
+
+  padding: 10px 12px;
+
+  border: 1px solid rgba(255,255,255,.25);
+  border-radius: 22px;
+
+  background: rgba(0,0,0,.55);
+  color: white;
+
+  font-size: 14px;
+  outline: none;
+  cursor: pointer;
+}
+
+.music-select option {
+  color: #222;
+  background: white;
+}
+
+.mute-btn {
+  position: fixed;
+
+  top: calc(18px + env(safe-area-inset-top));
+  right: calc(18px + env(safe-area-inset-right));
+
+  width: 46px;
+  height: 46px;
+
+  border: none;
+  border-radius: 50%;
+
+  background: rgba(0,0,0,.5);
+  color: white;
+
+  font-size: 20px;
+
+  box-shadow: 0 6px 16px rgba(0,0,0,.35);
+
+  cursor: pointer;
+  touch-action: manipulation;
+
+  z-index: 99999;
+
+  transition: transform .15s ease;
+}
+
+.mute-btn:active {
+  transform: scale(.94);
+}
+
+/* الموبايلات الصغيرة */
+
+@media (max-width: 380px) {
+  :root {
+    --env-width: min(280px, 78vw, 42dvh);
+  }
+
+  .letter {
+    width: calc(100vw - 24px);
+    padding: 13px;
+  }
+
+  .letter .content {
+    gap: 7px;
+  }
+
+  .letter .text {
+    font-size: 12.5px;
+  }
+}
+
+/* الشاشات الأفقية والقصيرة */
+
+@media (orientation: landscape) and (max-height: 550px) {
+  :root {
+    --env-width: min(210px, 48vw, 48dvh);
+  }
+
+  body {
+    padding-top: 85px;
+  }
+
+  .letter {
+    top: calc(85px + env(safe-area-inset-top));
+    max-height: 55dvh;
+    width: min(350px, 65vw);
+  }
+
+  .music-select {
+    top: calc(65px + env(safe-area-inset-top));
+  }
+}
+
+@media (max-height: 420px) {
+  .letter {
+    max-height: 45dvh;
+    padding: 10px;
+  }
+
+  .letter h2 {
+    font-size: 15px;
+    margin-bottom: 7px;
+  }
+}
+
+/* تقليل الحركة حسب إعدادات الجهاز */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+audio {
+  display: none;
+}
+</style>
+</head>
+
+<body>
+
+<audio
+  id="bgAudio"
+  src="https://files.catbox.moe/fkej4a.mp3"
+  preload="none"
+  loop>
+</audio>
+
+<!-- النجوم -->
+
+<script>
+const starCount = window.innerWidth < 480 ? 30 : 50;
+
+for (let i = 0; i < starCount; i++) {
+  const star = document.createElement("div");
+
+  star.className = "star";
+  star.style.top = Math.random() * 100 + "%";
+  star.style.left = Math.random() * 100 + "%";
+  star.style.animationDuration = (1 + Math.random() * 2) + "s";
+
+  document.body.appendChild(star);
+}
+</script>
+
+<!-- الظرف -->
+
+<div class="container">
+
+  <div class="envelope-wrapper" id="wrapper">
+
+    <div
+      class="envelope"
+      id="envelope"
+      aria-label="Open birthday card"
+    >
+
+      <div class="letter" id="letter">
+
+        <h2>💌 Happy Birthday Simon!</h2>
+
+        <div class="content">
+
+          <div class="text">
+            <p id="message"></p>
+          </div>
+
+          <img
+            src="https://i.ibb.co/0p9tX4r9/FB-IMG-1793838155434.jpg"
+            alt="Birthday image"
+            onerror="this.style.display='none'"
+          >
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div
+      class="heart"
+      id="heart"
+      role="button"
+      tabindex="0"
+      aria-label="Open or close birthday card"
+    ></div>
+
+  </div>
+
+</div>
+
+<!-- أزرار الصوت -->
+
+<button
+  id="muteBtn"
+  class="mute-btn"
+  aria-label="Mute or unmute music"
+  title="Mute or unmute"
+>
+  🔊
+</button>
+
+<select
+  id="musicSelect"
+  class="music-select"
+  aria-label="Choose birthday song"
+>
+  <option value="korea">🇰🇷 Korean</option>
+  <option value="english">🇬🇧 English</option>
+  <option value="german">🇩🇪 German</option>
+</select>
+
+<script>
+"use strict";
+
+/* العناصر */
+
+const heart = document.getElementById("heart");
+const wrapper = document.getElementById("wrapper");
+const audio = document.getElementById("bgAudio");
+const muteBtn = document.getElementById("muteBtn");
+const musicSelect = document.getElementById("musicSelect");
+const messageElement = document.getElementById("message");
+
+/* الأغاني */
+
+const musicTracks = {
+  english:
+    "https://raw.githubusercontent.com/tomasatef72-maker/Music/main/Happy%20Birthday%20Song___(MP3_320K).mp3",
+
+  german:
+    "https://raw.githubusercontent.com/tomasatef72-maker/Music/main/Zum%20Geburtstag%20viel%20Gl%C3%BCck%20-%20Traditionelle%20Kinderlieder%20__%20Kinderlieder(MP3_320K).mp3",
+
+  korea:
+    "https://files.catbox.moe/fkej4a.mp3"
+};
+
+/* الرسالة */
+
+const birthdayMessage =
+"Happy birthday, Simon! ❤️ I hope you achieve everything your heart wishes for and even more. You're like a sister to me, and I'll never forget how you stood by my side during my high school days. I'll always be grateful for that. You deserve all the happiness and goodness in the world, and so much more. May this year be filled with blessings, success, and beautiful moments for you. Thank you for everything, Simon! ❤️";
+
+/* الحالات */
+
+let isAnimating = false;
+let typingTimeout = null;
+let isOpen = false;
+
+/* تحديث أيقونة الصوت */
+
+function refreshMuteIcon() {
+  muteBtn.textContent = audio.muted ? "🔇" : "🔊";
+
+  muteBtn.setAttribute(
+    "aria-label",
+    audio.muted ? "Unmute music" : "Mute music"
+  );
+}
+
+/* الكتابة التدريجية */
+
+function stopTyping() {
+  if (typingTimeout !== null) {
+    clearTimeout(typingTimeout);
+    typingTimeout = null;
+  }
+}
+
+function typeMessage(element, text, speed = 45) {
+  stopTyping();
+
+  const characters = Array.from(text);
+  let index = 0;
+
+  element.textContent = "";
+
+  function next() {
+    if (!isOpen) return;
+
+    if (index < characters.length) {
+      element.textContent += characters[index];
+      index++;
+
+      typingTimeout = setTimeout(next, speed);
+    } else {
+      typingTimeout = null;
+    }
+  }
+
+  next();
+}
+
+/* القصاصات الملونة */
+
+function launchConfetti() {
+  const count = window.innerWidth < 480 ? 30 : 50;
+
+  const colors = [
+    "#f94144",
+    "#f3722c",
+    "#f9c74f",
+    "#90be6d",
+    "#577590",
+    "#ff99c8",
+    "#c77dff"
+  ];
+
+  for (let i = 0; i < count; i++) {
+    const confetti = document.createElement("div");
+
+    confetti.className = "confetti";
+
+    confetti.style.backgroundColor =
+      colors[Math.floor(Math.random() * colors.length)];
+
+    confetti.style.left =
+      Math.random() * window.innerWidth + "px";
+
+    confetti.style.animationDuration =
+      (2 + Math.random() * 2) + "s";
+
+    document.body.appendChild(confetti);
+
+    setTimeout(() => {
+      confetti.remove();
+    }, 4500);
+  }
+}
+
+/* تشغيل الموسيقى */
+
+async function playMusic() {
+  try {
+    audio.loop = true;
+    audio.volume = 0.7;
+
+    await audio.play();
+
+  } catch (error) {
+    // بعض المتصفحات قد تحتاج إلى ضغطة أخرى من المستخدم.
+  }
+
+  refreshMuteIcon();
+}
+
+/* إيقاف الموسيقى */
+
+function stopMusic() {
+  audio.pause();
+
+  try {
+    audio.currentTime = 0;
+  } catch (error) {}
+
+}
+
+/* فتح الظرف */
+
+async function openCard() {
+  isOpen = true;
+
+  wrapper.classList.add("flap");
+
+  typeMessage(messageElement, birthdayMessage, 45);
+
+  launchConfetti();
+
+  await playMusic();
+}
+
+/* غلق الظرف */
+
+function closeCard() {
+  isOpen = false;
+
+  wrapper.classList.remove("flap");
+
+  stopTyping();
+  stopMusic();
+
+  messageElement.textContent = "";
+
+  refreshMuteIcon();
+}
+
+/* التحكم في القلب */
+
+async function toggleCard() {
+  if (isAnimating) return;
+
+  isAnimating = true;
+
+  try {
+    if (isOpen) {
+      closeCard();
+    } else {
+      await openCard();
+    }
+  } finally {
+    setTimeout(() => {
+      isAnimating = false;
+    }, 900);
+  }
+}
+
+heart.addEventListener("click", toggleCard);
+
+/* دعم لوحة المفاتيح */
+
+heart.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    toggleCard();
+  }
+});
+
+/* كتم وتشغيل الصوت */
+
+muteBtn.addEventListener("click", () => {
+  audio.muted = !audio.muted;
+  refreshMuteIcon();
+});
+
+/* تغيير الأغنية */
+
+musicSelect.addEventListener("change", async () => {
+  const wasPlaying = !audio.paused;
+
+  const selectedTrack = musicTracks[musicSelect.value];
+
+  if (!selectedTrack) return;
+
+  audio.pause();
+
+  audio.src = selectedTrack;
+  audio.load();
+
+  if (isOpen && wasPlaying) {
+    await playMusic();
+  }
+
+  refreshMuteIcon();
+});
+
+/* تحديث الصوت عند تحميل الصفحة */
+
+refreshMuteIcon();
+
+</script>
+
+</body>
+</html>
